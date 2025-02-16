@@ -1,9 +1,20 @@
 #!/bin/bash
 
+PUZZLE_FILES=("puzzle2-fill-valid.txt" "puzzle2-invalid.txt" "puzzle2-valid.txt" "puzzle9-valid.txt")
+
 # Script to compile and run sudoku program
 rm -f sudoku
-gcc -Wall -Wextra sudoku.c -o sudoku
-../src/sudoku puzzle9-valid.txt
+gcc -g -fsanitize=address -Wall -Wextra -I../src ../src/sudoku.c -o sudoku -lpthread -lm
+
+
+for file in "${PUZZLE_FILES[@]}"; do
+    echo "==========================="
+    echo "Puzzle File: $file"
+    echo
+    ./sudoku "$file"
+    echo 
+done
+
 
 # to check for memory leaks, use
 # valgrind ./sudoku puzzle9-good.txt
