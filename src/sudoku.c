@@ -1,6 +1,6 @@
 // Sudoku puzzle verifier and solver
 
-#include "entity.h"
+#include "grid.h"
 #include <assert.h>
 #include <math.h>
 #include <pthread.h>
@@ -18,11 +18,31 @@ int **readSudokuPuzzle(char *filename, Grid *grid) {
   FILE *fp = fopen(filename, "r");
   if (fp == NULL) {
     printf("Could not open file %s\n", filename);
+    fclose(fp);
+    exit(EXIT_FAILURE);
+  }
+
+  if (strstr(filename, ".txt") == NULL) {
+    fprintf("Invalid file: File %s must be a text file.\n", filename);
+    fclose(fp);
     exit(EXIT_FAILURE);
   }
 
   int psize;
   fscanf(fp, "%d", &psize);
+
+  // Check that number is perfect square
+  int root = (int)sqrt(psize);
+  if (psize <= 0 || (root * root) != psize) {
+    grid->houses[0][0][0] = -1;
+    printf("Invalid puzzle size %d: Puzzle must be a perfect square (2x2 "
+           "(size-4), 3x3 "
+           "(size-9), 4x4 (size 16) etc).",
+           psize);
+    fclose(fp);
+    exit(EXIT_FAILURE);
+  }
+
   ORDER = psize;
   grid->order = ORDER;
 
@@ -102,6 +122,7 @@ void *checkHousesStatus(void *arg) {
       grid->valid = false;
       pthread_mutex_unlock(&mutex);
 
+      printf("Invalid puzzle: A house should not have duplicate values.\n");
       // printf("Found duplicate: hs_t_idx=%d, hs_idx=%d.\n", hs_t_idx, hs_idx);
       //  printf("House counts: ");
       //  printCounts(grid->houses[hs_t_idx][hs_idx]);
@@ -221,9 +242,7 @@ int main(int argc, char **argv) {
   checkGridStatus(grid);
 
   if (!grid->valid) {
-    printf("Puzzle invalid: ");
     printSudokuPuzzle(grid_vals, grid->order);
-    printf("A house should not have duplicate values.\n");
 
     deleteSudokuPuzzle(grid, grid_vals);
     pthread_mutex_destroy(&mutex);

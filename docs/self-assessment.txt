@@ -1,0 +1,33 @@
+Sudoku Self-Assessment
+
+1. Verifying Puzzle Validity (10/10):
+   - The program checks each row, column, and subgrid for duplicate digits.
+   - For complete puzzles, it correctly determines whether the puzzle is valid.
+   - Appropriate error messages are displayed if the puzzle is invalid.
+
+2. Multithreading for Speedup (5/5):
+   - Multiple threads are created to validate different parts of the puzzle concurrently.
+   - At least three threads are used (one for rows, one for columns, one for boxes).
+   - Threads are properly joined to ensure the parent thread waits for all checks to complete.
+   - Mutex locking is used for practice, although not neccessary (since all threads can only write false).
+
+3. Handling NxN Puzzles (5/5):
+   - Can adapt to different puzzles that are perfect squares (e.g., 4x4, 9x9, 16x16).
+   - The puzzle size is read from the file and verified to be a perfect square.
+   - The grid is set up and processed correctly regardless of its size.
+
+4. Minimum Thread Requirement (5/5):
+   - Uses 3 threads as required, for checking that there are no duplicates in each house type.
+  
+Bonus: Puzzle Completion (2/2):
+   - Solver can fill in cells when there is exactly one candidate.
+
+Bonus: Solving Difficult Puzzles (0/3):
+   - Currently does not implement hidden value searching or other sudoku strategies.
+ 
+--------------------------------------------
+Total Score: 25/25 (basic requirements) + Bonus 2/5 = 27/30
+
+Comments:
+   - The project meets all the core requirements for verifying and solving easy Sudoku puzzles.
+   - Future improvements could include implementing more advanced techniques to handle difficult puzzles.
