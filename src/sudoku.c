@@ -157,7 +157,7 @@ void checkGridStatus(Grid *grid) {
 
 void solveCandidates(Grid *grid, int **grid_vals) {
   // Candidate Counts (_cc) and indexes for each house
-  int b_cc, r_cc, c_cc, b_idx, r_idx, c_idx;
+  int b_cc, b_idx, r_idx, c_idx;
   int *candidates;
 
   int box_size = (int)sqrt(grid->order);
@@ -169,16 +169,12 @@ void solveCandidates(Grid *grid, int **grid_vals) {
     for (b_idx = 0; b_idx < grid->order; b_idx++) {
       b_cc = grid->houses[box_t_idx][b_idx][0];
 
-      if (b_cc > 0 && b_cc < 4) {
+      if (b_cc > 0) {
         int start_row = (b_idx / box_size) * box_size;
         int start_col = (b_idx % box_size) * box_size;
 
         for (r_idx = start_row; r_idx < start_row + box_size; r_idx++) {
-          r_cc = grid->houses[row_t_idx][r_idx][0];
-
           for (c_idx = start_col; c_idx < start_col + box_size; c_idx++) {
-            c_cc = grid->houses[col_t_idx][c_idx][0];
-
             if (grid_vals[r_idx][c_idx] == 0) {
               candidates = locked_candidates(grid->houses[box_t_idx][b_idx],
                                              grid->houses[row_t_idx][r_idx],

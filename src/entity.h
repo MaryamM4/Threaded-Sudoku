@@ -2,6 +2,7 @@
 #ifndef ENTITY_H
 #define ENTITY_H
 
+#include <math.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -158,6 +159,16 @@ void delGrid(Grid *grid) {
 }
 
 // =========
+// Helper methods
+// --------
+
+// Helper method for getting idx of square Entity given corresponding row/col
+int getBoxIdx(int row, int col, int size) {
+  int box_size = (int)sqrt((double)size);
+  return (row / box_size) * box_size + (col / box_size);
+}
+
+// =========
 // Manipulators
 // --------
 
@@ -238,8 +249,8 @@ void locked_arr_house_cand(int *arr, House hs) {
   int max_locked = MIN(arr[0], hs[0]);
 
   if (max_locked < 0) {
-    perror("locked_arr_house_cand Error: Invalid House(s).");
-    return NULL;
+    printf("locked_arr_house_cand Error: Invalid House(s).");
+    arr[0] = -1;
   }
 
   arr[0] = 0; // First index reserved for candidate count.
@@ -284,16 +295,6 @@ int *locked_candidates(House hsA, House hsB, House hsC) {
 }
 
 // =========
-// Helpert methods
-// --------
-
-// Helper method for getting idx of square Entity given corresponding row/col
-int getBoxIdx(int row, int col, int size) {
-  int box_size = (int)sqrt((double)size);
-  return (row / box_size) * box_size + (col / box_size);
-}
-
-// =========
 // Display
 // --------
 
@@ -311,7 +312,7 @@ void printValues(House hs) {
   printf("\n");
 }
 
-printCounts(House hs) {
+void printCounts(House hs) {
   for (int i = 1; i <= ORDER; i++) {
     printf("%d ", hs[i]);
   }
