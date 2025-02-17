@@ -179,6 +179,8 @@ void checkGridStatus(Grid *grid) {
 // Hidden single: A house has multiple candidates, but
 //                only 1 cell can house a certain candidate.
 // Any house type can have hidden single/pair/triple/quad...(s).
+// Reference: https://www.sudoku9x9.com/howtosolve/expert/
+// https://www.sudokuonline.io/tips/advanced-sudoku-strategies
 void solveHiddens(Grid *grid, int **grid_vals) {
   //
 }
