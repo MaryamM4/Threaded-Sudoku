@@ -6,7 +6,7 @@ rm -f sudoku
 gcc -g -fsanitize=address -Wall -Wextra -I../src ../src/sudoku.c -o sudoku -lpthread -lm
 
 
-for file in tests/puzzle*.txt; do
+for file in Hard-Fill-Tests/puzzle*.txt; do
     echo "==========================="
     echo "Puzzle File: $file"
     echo

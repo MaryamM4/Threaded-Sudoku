@@ -1,4 +1,4 @@
-Sudoku Self-Assessment
+## Sudoku Self-Assessment
 
 1. Verifying Puzzle Validity (10/10):
    - The program checks each row, column, and subgrid for duplicate digits.
@@ -26,8 +26,4 @@ Bonus: Solving Difficult Puzzles (0/3):
    - Currently does not implement hidden value searching or other sudoku strategies.
  
 --------------------------------------------
-Total Score: 25/25 (basic requirements) + Bonus 2/5 = 27/30
-
-Comments:
-   - The project meets all the core requirements for verifying and solving easy Sudoku puzzles.
-   - Future improvements could include implementing more advanced techniques to handle difficult puzzles.
+Total Score: 25/25 (basic requirements) + Bonus 2/5 = 27/25

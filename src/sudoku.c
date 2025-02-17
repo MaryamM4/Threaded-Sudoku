@@ -176,7 +176,15 @@ void checkGridStatus(Grid *grid) {
   }
 }
 
-void solveCandidates(Grid *grid, int **grid_vals) {
+// Hidden single: A house has multiple candidates, but
+//                only 1 cell can house a certain candidate.
+// Any house type can have hidden single/pair/triple/quad...(s).
+void solveHiddens(Grid *grid, int **grid_vals) {
+  //
+}
+
+// Naked single: When a cell only has 1 candidate.
+void solveNakedSingles(Grid *grid, int **grid_vals) {
   // Candidate Counts (_cc) and indexes for each house
   int b_cc, b_idx, r_idx, c_idx;
   int *candidates;
@@ -222,7 +230,7 @@ void solveCandidates(Grid *grid, int **grid_vals) {
 
     if (changes_made < 1) {
       break; // If no changes made, no progress can be made
-      // @TODO: REMOVE THIS AFTER HIDDEN PAIRS/TRIPLES/QUADS CHECKING.
+      //  @TODO: REMOVE THIS AFTER HIDDEN PAIRS/TRIPLES/QUADS CHECKING.
     }
 
     // printSudokuPuzzle(grid_vals, grid->order);
@@ -257,11 +265,11 @@ int main(int argc, char **argv) {
     printSudokuPuzzle(grid_vals, grid->order);
 
     printf("Proceeding to solve... \n");
-    solveCandidates(grid, grid_vals);
+    solveNakedSingles(grid, grid_vals);
   }
 
   printf("%s",
-         grid->complete ? "Puzzle completed: " : "Puzzle still incomplete:");
+         grid->complete ? "Puzzle completed: " : "Puzzle could not be solved:");
 
   printSudokuPuzzle(grid_vals, grid->order);
   deleteSudokuPuzzle(grid, grid_vals);
