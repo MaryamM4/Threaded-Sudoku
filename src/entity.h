@@ -42,6 +42,21 @@ typedef struct {
 // "De/Constructors"
 // --------
 
+House initFullHouse() {
+  House hs = (House)malloc((ORDER + 1) * sizeof(int));
+  if (hs == NULL) {
+    perror("initEmptyHouse Error: Failed to allocate memory.");
+    exit(EXIT_FAILURE);
+  }
+
+  hs[0] = 0; // No candidates possible.
+  for (int val = 1; val <= ORDER; val++) {
+    hs[val] = 1;
+  }
+
+  return hs;
+}
+
 House initEmptyHouse() {
   House hs = (House)malloc((ORDER + 1) * sizeof(int));
   if (hs == NULL) {
@@ -217,6 +232,29 @@ int *locked_candidate_pairs(House hsA, House hsB) {
     }
   }
   return locked;
+}
+
+void locked_arr_house_cand(int *arr, House hs) {
+  int max_locked = MIN(arr[0], hs[0]);
+
+  if (max_locked < 0) {
+    perror("locked_arr_house_cand Error: Invalid House(s).");
+    return NULL;
+  }
+
+  arr[0] = 0; // First index reserved for candidate count.
+  int arr_idx = 1;
+  for (int val = 1; val <= ORDER; val++) {
+    if (hs[val] == 0) {
+      for (int ai = arr_idx; ai < arr[0]; ai++) {
+        if (arr[arr_idx] == val) {
+          arr[0] += 1;
+          arr[arr[0]] = val;
+          arr_idx++;
+        }
+      }
+    }
+  }
 }
 
 int *locked_candidates(House hsA, House hsB, House hsC) {

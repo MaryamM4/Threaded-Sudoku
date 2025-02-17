@@ -162,6 +162,12 @@ void solveCandidates(Grid *grid, int **grid_vals) {
 
   int box_size = (int)sqrt(grid->order);
 
+  int *lines_lcs = malloc((grid->order + 1) * sizeof(int));
+  if (lines_lcs == NULL) {
+    perror("Memory allocation failed");
+    exit(EXIT_FAILURE);
+  }
+
   while (!(grid->complete)) {
     for (b_idx = 0; b_idx < grid->order; b_idx++) {
       b_cc = grid->houses[box_t_idx][b_idx][0];
@@ -171,69 +177,90 @@ void solveCandidates(Grid *grid, int **grid_vals) {
         int start_col = (b_idx % box_size) * box_size;
 
         for (r_idx = start_row; r_idx < start_row + box_size; r_idx++) {
-          // r_cc = grid->houses[row_t_idx][r_idx][0];
+          r_cc = grid->houses[row_t_idx][r_idx][0];
 
-          for (c_idx = start_col; c_idx < start_col + box_size; c_idx++) {
-            // c_cc = grid->houses[col_t_idx][c_idx][0];
+          if (r_cc > 0) {
+            for (int i = 1; i < grid->order; i++) {
+              lines_lcs[i] = i;
+            }
+            lines_lcs[0] = grid->order;
 
-            if (grid_vals[r_idx][c_idx] == 0) {
-              candidates = locked_candidates(grid->houses[box_t_idx][b_idx],
-                                             grid->houses[row_t_idx][r_idx],
-                                             grid->houses[col_t_idx][c_idx]);
+            locked_arr_house_cand(lines_lcs, grid->houses[row_t_idx][r_idx]);
 
-              if (candidates[0] == 1) {
-                setValue(candidates[1], *grid, r_idx, c_idx);
-                grid_vals[r_idx][c_idx] = candidates[1];
+            for (c_idx = start_col; c_idx < start_col + box_size; c_idx++) {
+              c_cc = grid->houses[col_t_idx][c_idx][0];
+
+              if (grid_vals[r_idx][c_idx] == 0) {
+                candidates = locked_candidates(grid->houses[box_t_idx][b_idx],
+                                               grid->houses[row_t_idx][r_idx],
+                                               grid->houses[col_t_idx][c_idx]);
+
+                if (candidates[0] == 1) {
+                  setValue(candidates[1], *grid, r_idx, c_idx);
+                  grid_vals[r_idx][c_idx] = candidates[1];
+
+                } else if (c_cc > 0) {
+                  // Check for hidden pairs/triples/quads for
+                  // for every col that intersects with that row within the box.
+                  locked_arr_house_cand(lines_lcs,
+                                        grid->houses[col_t_idx][c_idx]);
+                }
+
+                free(candidates);
               }
 
-              free(candidates);
+              int c = (c_idx - start_col) + 1;
+              if (c > 1 && lines_lcs[0]) {
+                //
+              }
             }
           }
         }
       }
+      checkGridStatus(grid);
+
+      if (!(grid->valid)) {
+        printf("solveCandidates ERROR: Grid invalidated during solve.\n");
+        free(lines_lcs);
+        break;
+      }
+
+      // printSudokuPuzzle(grid_vals, grid->order);
     }
+    free(lines_lcs);
+  }
+
+  // expects file name of the puzzle as argument in command line
+  int main(int argc, char **argv) {
+    if (argc != 2) {
+      printf("usage: ./sudoku puzzle.txt\n");
+      return EXIT_FAILURE;
+    }
+
+    Grid *grid = newGrid();
+
+    int **grid_vals = readSudokuPuzzle(argv[1], grid);
     checkGridStatus(grid);
 
-    if (!(grid->valid)) {
-      printf("solveCandidates ERROR: Grid invalidated during solve.\n");
-      break;
+    if (!grid->valid) {
+      printf("Puzzle invalid. An house cannot have duplicate values.\n");
+      deleteSudokuPuzzle(grid, grid_vals);
+      pthread_mutex_destroy(&mutex);
+      return EXIT_FAILURE;
+
+    } else {
+      printf("Puzzle valid.\n");
     }
 
-    // printSudokuPuzzle(grid_vals, grid->order);
-  }
-}
+    if (!grid->complete) {
+      printSudokuPuzzle(grid_vals, grid->order);
+      printf("Puzzle incomplete. Proceeding to solve... \n\n");
+      solveCandidates(grid, grid_vals);
+    }
 
-// expects file name of the puzzle as argument in command line
-int main(int argc, char **argv) {
-  if (argc != 2) {
-    printf("usage: ./sudoku puzzle.txt\n");
-    return EXIT_FAILURE;
-  }
-
-  Grid *grid = newGrid();
-
-  int **grid_vals = readSudokuPuzzle(argv[1], grid);
-  checkGridStatus(grid);
-
-  if (!grid->valid) {
-    printf("Puzzle invalid. An house cannot have duplicate values.\n");
+    printf("Puzzle completed.\n");
+    printSudokuPuzzle(grid_vals, grid->order);
     deleteSudokuPuzzle(grid, grid_vals);
     pthread_mutex_destroy(&mutex);
-    return EXIT_FAILURE;
-
-  } else {
-    printf("Puzzle valid.\n");
+    return EXIT_SUCCESS;
   }
-
-  if (!grid->complete) {
-    printSudokuPuzzle(grid_vals, grid->order);
-    printf("Puzzle incomplete. Proceeding to solve... \n\n");
-    solveCandidates(grid, grid_vals);
-  }
-
-  printf("Puzzle completed.\n");
-  printSudokuPuzzle(grid_vals, grid->order);
-  deleteSudokuPuzzle(grid, grid_vals);
-  pthread_mutex_destroy(&mutex);
-  return EXIT_SUCCESS;
-}
