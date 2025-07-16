@@ -1,8 +1,16 @@
-# Sudoku verifier and solver
+# Sudoku Verifier and Solver
 
-Works on sudoku puzzles of any size.
-Uses multiple threads to check if a puzzle is valid.
+Validates and partially solves NxN Sudoku puzzles using a constraint-oriented design.
 
+Instead of per-cell candidate tracking, the system models state through house structures (row, column, box) to enable direct consistency checks and constraint propagation. Each house tracks candidate availability via fixed-size integer arrays. Candidate discovery uses locked candidate logic derived from the intersection of the three relevant houses (row ∩ column ∩ box).
+
+The architecture was designed to support future binary representations and bitwise operations for faster constraint resolution, though this is not currently implemented. Solving strategy is limited to naked singles and does not support recursion or backtracking.
+
+**Note:**  
+Multithreaded consistency checks via pthreads are included for completeness but do not yield performance gains yet.
+
+
+## Results
 For puzzles that have any "0"s, tries to find a valid number for the 0. Can solve simple puzzles where no backtracking is required.
 
 2x2 puzzle
