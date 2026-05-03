@@ -207,11 +207,11 @@ void removeValue(House hs, int val) {
 // When a candidate is determined as an answer
 // Add value to corresponding houses.
 void setValue(int val, Grid *grid, int row, int col) {
-  int box = getBoxIdx(row, col, grid.order);
+  int box = getBoxIdx(row, col, grid->order);
 
-  addValue(grid.houses[box_t_idx][box], val);
-  addValue(grid.houses[row_t_idx][row], val);
-  addValue(grid.houses[col_t_idx][col], val);
+  addValue(grid->houses[box_t_idx][box], val);
+  addValue(grid->houses[row_t_idx][row], val);
+  addValue(grid->houses[col_t_idx][col], val);
 }
 
 // =========
