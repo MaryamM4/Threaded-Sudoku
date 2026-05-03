@@ -3,14 +3,12 @@
 #include "grid.h"
 #include <assert.h>
 #include <math.h>
-#include <pthread.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 int ORDER;
-
-pthread_mutex_t mutex;
 
 // takes filename and pointer to Grid of Houses
 // returns grid values of Sudoku puzzle and fills houses
@@ -18,27 +16,26 @@ int **readSudokuPuzzle(char *filename, Grid *grid) {
   FILE *fp = fopen(filename, "r");
   if (fp == NULL) {
     printf("Could not open file %s\n", filename);
-    fclose(fp);
     exit(EXIT_FAILURE);
   }
 
   if (strstr(filename, ".txt") == NULL) {
-    fprintf("Invalid file: File %s must be a text file.\n", filename);
+    fprintf(stderr, "Invalid file: File %s must be a text file.\n", filename);
     fclose(fp);
     exit(EXIT_FAILURE);
   }
 
   int psize;
-  fscanf(fp, "%d", &psize);
+  if (fscanf(fp, "%d", &psize) != 1) {
+    fprintf(stderr, "Failed to read puzzle size.\n");
+    fclose(fp);
+    exit(EXIT_FAILURE);
+  }
 
   // Check that number is perfect square
   int root = (int)sqrt(psize);
   if (psize <= 0 || (root * root) != psize) {
-    grid->houses[0][0][0] = -1;
-    printf("Invalid puzzle size %d: Puzzle must be a perfect square (2x2 "
-           "(size-4), 3x3 "
-           "(size-9), 4x4 (size 16) etc).",
-           psize);
+    fprintf(stderr, "Invalid puzzle size %d: Puzzle must be a perfect square.\n", psize);
     fclose(fp);
     exit(EXIT_FAILURE);
   }
@@ -109,7 +106,7 @@ void *checkHousesStatus(void *arg) {
   Grid *grid = grid_it->grid;
   int hs_t_idx = grid_it->house_type_idx;
 
-  if (!(grid->valid) && !(grid->complete)) {
+  if (!grid->valid) {
     free(grid_it);
     return NULL;
   } // Grid alrdy known to be invalid from other threads.
@@ -117,10 +114,7 @@ void *checkHousesStatus(void *arg) {
   // Don't need to lock for reading
   for (int hs_idx = 0; hs_idx < grid->order; hs_idx++) {
     if (grid->houses[hs_t_idx][hs_idx][0] == INVALID && grid->valid) {
-      // Lock before changing shared invalid bool
-      pthread_mutex_lock(&mutex);
       grid->valid = false;
-      pthread_mutex_unlock(&mutex);
 
       printf("Invalid puzzle: A house should not have duplicate values.\n");
       // printf("Found duplicate: hs_t_idx=%d, hs_idx=%d.\n", hs_t_idx, hs_idx);
@@ -129,15 +123,26 @@ void *checkHousesStatus(void *arg) {
       //  printf("\n");
 
     } else if (grid->houses[hs_t_idx][hs_idx][0] != FULL && grid->complete) {
-      // Locking before changing shared complete bool
-      pthread_mutex_lock(&mutex);
       grid->complete = false;
-      pthread_mutex_unlock(&mutex);
     }
   }
 
   free(grid_it);
   return NULL;
+}
+
+void checkHouseType(Grid *grid, int hs_t_idx) {
+  for (int hs_idx = 0; hs_idx < grid->order; hs_idx++) {
+    if (grid->houses[hs_t_idx][hs_idx][0] == INVALID) {
+      grid->valid = false;
+      grid->complete = false;
+      printf("Invalid puzzle: A house should not have duplicate values.\n");
+      return;
+    
+    } else if (grid->houses[hs_t_idx][hs_idx][0] != FULL && grid->complete) {
+      grid->complete = false;
+    }
+  }
 }
 
 void checkGridStatus(Grid *grid) {
@@ -150,29 +155,12 @@ void checkGridStatus(Grid *grid) {
     }
   }
 
-  if (pthread_mutex_init(&mutex, NULL) != 0) {
-    printf("checkGridStatus Error: Mutex initialization failed.\n");
-    exit(EXIT_FAILURE);
-  }
-
   // Assume innocent until proven guilty.
   grid->complete = true;
   grid->valid = true;
 
-  pthread_t threads[3];
-  for (int i = 0; i < NUM_HOUSE_TYPES; i++) {
-    GridIterator *grid_it = newGridTypeIt(grid, i);
-
-    if (pthread_create(&threads[i], NULL, checkHousesStatus, grid_it) != 0) {
-      printf("checkHousesStatus Error: pthread_create failed.\n");
-      free(grid_it);
-      exit(EXIT_FAILURE);
-    }
-  }
-
-  // Wait for all threads to complete
-  for (int i = 0; i < NUM_HOUSE_TYPES; i++) {
-    pthread_join(threads[i], NULL);
+  for (int t_idx = 0; t_idx < NUM_HOUSE_TYPES; t_idx++) {
+    checkHouseType(grid, t_idx);
   }
 }
 
@@ -194,7 +182,7 @@ void solveNakedSingles(Grid *grid, int **grid_vals) {
   int box_size = (int)sqrt(grid->order);
   int changes_made;
 
-  while (!(grid->complete)) {
+  while (!grid->complete && grid->valid) {
     changes_made = 0;
 
     for (b_idx = 0; b_idx < grid->order; b_idx++) {
@@ -211,6 +199,11 @@ void solveNakedSingles(Grid *grid, int **grid_vals) {
                                              grid->houses[row_t_idx][r_idx],
                                              grid->houses[col_t_idx][c_idx]);
 
+              if (candidates == NULL) {
+                grid->valid = false;
+                break;
+              }
+              
               if (candidates[0] == 1) {
                 setValue(candidates[1], *grid, r_idx, c_idx);
                 grid_vals[r_idx][c_idx] = candidates[1];
@@ -255,7 +248,6 @@ int main(int argc, char **argv) {
     printSudokuPuzzle(grid_vals, grid->order);
 
     deleteSudokuPuzzle(grid, grid_vals);
-    pthread_mutex_destroy(&mutex);
     return EXIT_FAILURE;
 
   } else {
@@ -270,11 +262,9 @@ int main(int argc, char **argv) {
     solveNakedSingles(grid, grid_vals);
   }
 
-  printf("%s",
-         grid->complete ? "Puzzle completed: " : "Puzzle could not be solved:");
+  printf("%s", grid->complete ? "Puzzle completed: " : "Puzzle could not be solved:");
 
   printSudokuPuzzle(grid_vals, grid->order);
   deleteSudokuPuzzle(grid, grid_vals);
-  pthread_mutex_destroy(&mutex);
   return EXIT_SUCCESS;
 }
