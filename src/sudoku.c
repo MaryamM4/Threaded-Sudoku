@@ -205,7 +205,7 @@ void solveNakedSingles(Grid *grid, int **grid_vals) {
               }
               
               if (candidates[0] == 1) {
-                setValue(candidates[1], *grid, r_idx, c_idx);
+                setValue(candidates[1], grid, r_idx, c_idx);
                 grid_vals[r_idx][c_idx] = candidates[1];
                 changes_made++;
               }
