@@ -40,6 +40,9 @@ int **readSudokuPuzzle(char *filename, Grid *grid) {
     exit(EXIT_FAILURE);
   }
 
+  grid->complete = true;
+  grid->valid = true;
+
   ORDER = psize;
   grid->order = ORDER;
 
